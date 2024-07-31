@@ -427,6 +427,7 @@ class TroopManager:
                     self.logger.debug(
                         f"Current Haul: {curr_haul} = Gather Batch ({gather_batch}) * Batch Multiplier {available_selection} ({batch_multiplier[available_selection - 1]})")
 
+                    has_troops = False
                     for item in haul_dict:
                         item, carry = item.split(":")
                         if item == "knight":
@@ -446,20 +447,25 @@ class TroopManager:
                             troops_int -= troops_selected
                             troops[item] = str(troops_int)
                             payload["squad_requests[0][candidate_squad][unit_counts][%s]" % item] = str(troops_selected)
+                            if troops_selected > 0:
+                                has_troops = True
                         else:
                             payload["squad_requests[0][candidate_squad][unit_counts][%s]" % item] = "0"
                     payload["squad_requests[0][candidate_squad][carry_max]"] = str(curr_haul)
                     payload["h"] = self.wrapper.last_h
-                    self.wrapper.get_api_action(
-                        action="send_squads",
-                        params={"screen": "scavenge_api"},
-                        data=payload,
-                        village_id=self.village_id,
-                    )
-                    sleep += random.randint(1, 5)
-                    time.sleep(sleep)
-                    self.last_gather = int(time.time())
-                    self.logger.info(f"Using troops for gather operation: {available_selection}")
+                    if has_troops:
+                        self.wrapper.get_api_action(
+                            action="send_squads",
+                            params={"screen": "scavenge_api"},
+                            data=payload,
+                            village_id=self.village_id,
+                        )
+                        sleep += random.randint(5, 15)
+                        time.sleep(sleep)
+                        self.last_gather = int(time.time())
+                        self.logger.info(f"Using troops for gather operation: {available_selection}")
+                    else:
+                        self.logger.info(f"No troops for gather operation: {available_selection}")
                 else:
                     # Gathering already exists or locked
                     break
