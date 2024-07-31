@@ -67,6 +67,7 @@ help_file = {
     'village.trade_for_premium': 'Trade left-over resources for premium points (requires the global option to be enabled)',
     'village.gather_enabled': 'Uses left-over units to gather additional resources if the option is enabled on the world',
     'village.gather_selection': 'The gather operation to preform (they have to be unlocked first)',
+    'village.gather_disabled_units': 'Units to exclude from the gather operation',
     'village.snobs': 'The amount of snobs to create in the current village',
     'village.evacuate_fragile_units_on_attack': 'Automatically evacuate fragile units (axe, snob) to nearby safe villages in case of an attack',
     'village.support_others': 'Allows the sending of automatic support',

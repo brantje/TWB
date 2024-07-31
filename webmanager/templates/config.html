@@ -34,8 +34,14 @@
 <script>
     var set_values = {};
 	function set_config(parameter, value) {
-		$.getJSON("/app/config/set?parameter="+encodeURIComponent(parameter)+"&value="+encodeURIComponent(value), function(data){
-			console.log("Set values", parameter, value);
+		$.post({
+			contentType: 'application/json',
+			url: "/app/config/set",
+			data: JSON.stringify({ parameter, value }),
+			success: function(data){
+				console.log("Set values", parameter, value);
+			},
+			dataType: 'json'
 		});
 	}
 

@@ -235,16 +235,22 @@ def get_js():
     return send_from_directory(urlpath, "js.v2.js")
 
 
-@app.route('/app/config/set', methods=['GET'])
+@app.route('/app/config/set', methods=['POST'])
 def config_set():
     vid = request.args.get("village_id", None)
+    parameter = request.json["parameter"]
+    value = request.json.get("value", None)
+
+    # No parameter -> ignore
+    if not parameter:
+        return jsonify(sync())
+
     if not vid:
-        DataReader.config_set(parameter=request.args.get("parameter"), value=request.args.get("value", None))
+        DataReader.config_set(parameter=parameter, value=value)
     else:
-        param = request.args.get("parameter")
-        if param.startswith("village."):
-            param = param.replace("village.", "")
-        DataReader.village_config_set(village_id=vid, parameter=param, value=request.args.get("value", None))
+        if parameter.startswith("village."):
+            parameter = parameter.replace("village.", "")
+        DataReader.village_config_set(village_id=vid, parameter=parameter, value=value)
 
     return jsonify(sync())
 

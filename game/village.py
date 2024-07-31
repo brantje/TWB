@@ -504,7 +504,9 @@ class Village:
                 selection=self.get_village_config(
                     self.village_id, parameter="gather_selection", default=1
                 ),
-                disabled_units=self.disabled_units,
+                disabled_units=self.disabled_units + self.get_village_config(
+                    self.village_id, parameter="gather_disabled_units", default=[]
+                ),
                 advanced_gather=self.get_village_config(self.village_id, parameter="advanced_gather", default=1)
             )
 

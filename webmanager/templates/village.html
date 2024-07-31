@@ -27,8 +27,14 @@
 <script>
     var set_values = {};
 	function set_config(parameter, value) {
-		$.getJSON("/app/config/set?village_id={{current_select}}&parameter="+encodeURIComponent(parameter)+"&value="+encodeURIComponent(value), function(data){
-			console.log("Set values", parameter, value);
+		$.post({
+			contentType: 'application/json',
+			url: "/app/config/set?village_id={{current_select}}",
+			data: JSON.stringify({ parameter, value }),
+			success: function(data){
+				console.log("Set values", parameter, value);
+			},
+			dataType: 'json'
 		});
 	}
 
@@ -77,6 +83,14 @@
       $('#save_config').removeClass('disabled');
 	}
 
+    function list_event() {
+      var target = $(event.target);
+      var name = target.attr("data-type-option");
+      if(name == undefined) alert("Error setting target");
+      set_values[name] = target.val().split(/,\s*/);
+      $('#save_config').removeClass('disabled');
+    }
+
 	$( document ).ready(function() {
 		$( "[data-type=toggle]" ).click(function(e) {
 		  toggle_event(e);
@@ -92,6 +106,10 @@
 
 		$( "[data-type=text]" ).change(function(e) {
 		  text_event(e);
+		});
+
+		$( "[data-type=list]" ).change(function(e) {
+		  list_event(e);
 		});
 
 		$('#save_config').click(function(){
