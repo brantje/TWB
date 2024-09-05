@@ -227,29 +227,45 @@ class OverviewPage:
         """Get the overview villages data using the wrapper object."""
         return self.wrapper.get_url("game.php?screen=overview_villages")
 
+    def _get_overview_with_villages_overview(self):
+        rows = self.production_table.find_all("tr")
+        for row in rows:
+            if row.find_all("td"):
+                cells = row.find_all("td")
+                idx_offset = 1 if len(cells[0].contents) == 0 else 0  # Compatibility with premium account
+                village_id = cells[idx_offset].contents[1].attrs["data-id"]
+
+                name, coordinates, continent = self._extract_name_cords_continent(
+                    cells[idx_offset].text.strip()
+                )
+                points = cells[1 + idx_offset].text.strip()
+                resources = cells[2 + idx_offset].text.strip()
+                storage_capacity = cells[3 + idx_offset].text.strip()
+
+                storage = Storage(resources, storage_capacity)
+                farm = Farm(cells[4 + idx_offset].text.strip())
+                village = Village(
+                    village_id, name, coordinates, continent, points, storage, farm
+                )
+                self.villages_data[village_id] = village
+
     def parse_production_table(self):
         """Parse the production table to extract village data."""
         if self.production_table:
-            rows = self.production_table.find_all("tr")
-            for row in rows:
-                if row.find_all("td"):
-                    cells = row.find_all("td")
-                    idx_offset = 1 if len(cells[0].contents) == 0 else 0  # Compatibility with premium account
-                    village_id = cells[idx_offset].contents[1].attrs["data-id"]
-
-                    name, coordinates, continent = self._extract_name_cords_continent(
-                        cells[idx_offset].text.strip()
-                    )
-                    points = cells[1 + idx_offset].text.strip()
-                    resources = cells[2 + idx_offset].text.strip()
-                    storage_capacity = cells[3 + idx_offset].text.strip()
-
-                    storage = Storage(resources, storage_capacity)
-                    farm = Farm(cells[4 + idx_offset].text.strip())
-                    village = Village(
-                        village_id, name, coordinates, continent, points, storage, farm
-                    )
-                    self.villages_data[village_id] = village
+            try:
+                self._get_overview_with_villages_overview()
+                return
+            except IndexError:
+                # World where overview page does not contain any villages if only one is available
+                get_from_url = re.search(r"village=([\da-z]+)", self.result_get.text)
+                if get_from_url:
+                    village_id = get_from_url.group(1)
+                    print("Detected Village ID %s from URLs" % village_id)
+                    if village_id not in self.villages_data:
+                        print("No villages on overview page, assuming village ID is within URL")
+                        self.villages_data[village_id] = None
+                        return
+        return
 
     def parse_header_info(self) -> None:
         """Parse header information to get world options."""
