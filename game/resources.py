@@ -10,7 +10,7 @@ from core.extractors import Extractor
 
 class PremiumExchange:
     """
-    Logic for interaction with the premium exchange
+    Optimized logic for interaction with the premium exchange
     """
 
     def __init__(self, wrapper, stock: dict, capacity: dict, tax: dict, constants: dict, duration: int, merchants: int):
@@ -22,70 +22,81 @@ class PremiumExchange:
         self.duration = duration
         self.merchants = merchants
 
-    # do not call this anihilation (calculate_cost) - i dechipered it from tribalwars js
     def calculate_cost(self, item, a):
         """
-        Stock exchange cost calculation
+        Calculates the total cost of selling `a` units of `item`
         """
+        if item not in self.stock or item not in self.capacity:
+            raise ValueError(f"Invalid item: {item}")
+
         t = self.stock[item]
         n = self.capacity[item]
+        tax = self.tax["sell"]
 
-        # tax = self.tax["buy"] if a >= 0 else self.tax["sell"]
-        tax = self.tax["sell"]  # twb never buys on premium exchange
-
+        if t - a < 0:
+            raise ValueError("Not enough stock to sell")
+        
         return (1 + tax) * (self.calculate_marginal_price(t, n) + self.calculate_marginal_price(t - a, n)) * a / 2
 
     def calculate_marginal_price(self, e, a):
         """
-        Math magic
+        Computes marginal price for an item based on stock elasticity.
         """
         c = self.constants
-        return c["resource_base_price"] - c["resource_price_elasticity"] * e / (a + c["stock_size_modifier"])
+        denominator = a + c["stock_size_modifier"]
+        
+        if denominator == 0:
+            raise ZeroDivisionError("Stock size modifier results in division by zero.")
+        
+        return c["resource_base_price"] - c["resource_price_elasticity"] * e / denominator
 
     def calculate_rate_for_one_point(self, item: str):
         """
-        Math magic
+        Uses binary search to find the optimal number of items to sell per point.
         """
+        if item not in self.stock:
+            raise ValueError(f"Item {item} not found in stock.")
+        
         a = self.stock[item]
         t = self.capacity[item]
         n = self.calculate_marginal_price(a, t)
         r = int(1 / n)
-        c = self.calculate_cost(item, r)
-        i = 0
 
-        while c > 1 and i < 50:
-            r -= 1
-            i += 1
-            c = self.calculate_cost(item, r)
+        low, high = 1, r
+        best_r = r
 
-        return r
+        while low <= high:
+            mid = (low + high) // 2
+            cost = self.calculate_cost(item, mid)
+            
+            if cost > 1:
+                high = mid - 1
+            else:
+                best_r = mid
+                low = mid + 1
+        
+        return best_r
 
     @staticmethod
     def optimize_n(amount, sell_price, merchants, size=1000):
         """
-        Math magic
+        Optimized method to find the best number of merchants and trade ratio.
         """
         def _ratio(a, b, size=1000):
-            a = (size * b) - a
-            return a / size
+            return ((size * b) - a) / size
 
-        offers = []
+        best_offer = min(
+            ((i, _ratio(j * sell_price, i, size=size), j) 
+             for i in range(1, merchants + 1) 
+             for j in range(amount // sell_price + 1) if _ratio(j * sell_price, i, size=size) >= 0),
+            key=lambda x: (x[1], -x[0]),
+            default=None
+        )
 
-        for i in range(1, merchants + 1):
-            for j in range(amount // sell_price + 1):
-                r = _ratio(j * sell_price, i, size=size)
-                if r >= 0:
-                    offers.append((i, r, j))
-
-        offers.sort(key=lambda x: (x[1], -x[0]))
-
-        r = {
-            "merchants": offers[0][0],
-            "ratio": offers[0][1],
-            "n_to_sell": offers[0][2]
-        }
-
-        return r
+        if best_offer is None:
+            return {"merchants": 0, "ratio": 0, "n_to_sell": 0}
+        
+        return {"merchants": best_offer[0], "ratio": best_offer[1], "n_to_sell": best_offer[2]}
 
 
 class ResourceManager:
