@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import argparse
 sys.path.insert(0, "../")
 
 from flask import Flask, jsonify, send_from_directory, request, render_template
@@ -255,7 +256,15 @@ def config_set():
     return jsonify(sync())
 
 
-if len(sys.argv) > 1:
-    app.run(host="localhost", port=sys.argv[1])
-else:
-    app.run()
+def parse_args():
+    parser = argparse.ArgumentParser(description='Web Manager Server')
+    parser.add_argument('--host', '-H', default='localhost',
+                      help='Host to bind to (default: localhost)')
+    parser.add_argument('--port', '-p', type=int, default=5000,
+                      help='Port to bind to (default: 5000)')
+    return parser.parse_args()
+
+
+if __name__ == '__main__':
+    args = parse_args()
+    app.run(host=args.host, port=args.port)
