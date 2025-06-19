@@ -110,6 +110,18 @@ class WebWrapper:
             self.logger.warning("POST %s %s: %s", url, enc, str(e))
             return None
 
+    def login(self):
+        """
+        Login to the game
+        """
+        self.web.cookies.clear()
+        root_domain_split = self.endpoint.split('/')[2].split('.')
+        root_domain_split.remove(root_domain_split[0])
+        root_domain = '.'.join(root_domain_split)
+        print(root_domain)
+        
+        pass
+
     def start(self, ):
         """
         Start the bot and verify whether the last session is still valid
@@ -123,9 +135,10 @@ class WebWrapper:
             self.logger.warning("Current session cache not valid")
 
         self.web.cookies.clear()
+        self.login()
         self.logger.info("Killing bot, set cookies via the webmanager")
-        os.kill(os.getpid(), signal.SIGKILL)
-        return False
+        # os.kill(os.getpid(), signal.SIGKILL)
+        # return False
         # cinp = input("Enter browser cookie string> ")
         # cookies = {}
         # cinp = cinp.strip()
