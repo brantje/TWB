@@ -61,12 +61,14 @@
 
                 <div class="mb-3">
                     <label class="form-label"><strong>Current Session:</strong></label>
+                    
                     <div class="input-group">
-                        <input type="text" id="session_data" class="form-control" value="{{session.raw}}" readonly>
+                        <input type="text" id="session_data" class="form-control" value="{{session.raw}}">
                         <div class="input-group-append">
                             <button class="btn btn-outline-secondary btn-sm" onclick="copySessionData()">
                                 <i class="fas fa-copy"></i>
                             </button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="setSession()">Set Session</button>
                         </div>
                     </div>
                     <small class="text-muted">{{session.endpoint}}</small>
@@ -206,6 +208,18 @@ function showNotification(type, message) {
             $(this).remove();
         });
     }, 5000);
+}
+
+function setSession() {
+    const sessionData = $('#session_data').val();
+    $.ajax({
+        url: '/app/session/set',
+        method: 'POST',
+        data: JSON.stringify({ session: sessionData }),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
 }
 </script>
 {% endblock %}

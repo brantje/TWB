@@ -2,7 +2,7 @@ import collections
 import json
 import os
 import subprocess
-
+import signal
 import psutil
 
 
@@ -95,6 +95,14 @@ class DataReader:
                 cookies.append("%s=%s" % (c, session_data['cookies'][c]))
             session_data['raw'] = ';'.join(cookies)
             return session_data
+    
+    @staticmethod
+    def session_set(session_data):
+        c_path = os.path.join(os.path.dirname(__file__), "..", "cache", "session.json")
+        with open(c_path, 'w') as session_file:
+            json.dump(session_data, session_file, indent=2, sort_keys=False)
+            print("Deployed new session file")
+            return True
 
 
 class BuildingTemplateManager:
@@ -188,6 +196,9 @@ class BotManager:
     pid = None
 
     def is_running(self):
+        print(self.pid)
+        if self.pid != None:
+            print(psutil.pid_exists(self.pid))
         if not self.pid:
             return False
         if psutil.pid_exists(self.pid):
@@ -203,5 +214,6 @@ class BotManager:
 
     def stop(self):
         if self.is_running():
-            os.kill(self.pid, sig=0)
+            os.kill(self.pid, signal.SIGTERM)
+            self.pid = None
             print("Bot stopped successfully")

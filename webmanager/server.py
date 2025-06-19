@@ -229,6 +229,33 @@ def get_home():
     session = DataReader.get_session()
     return render_template('bot.html', data=sync(), session=session)
 
+@app.route('/app/session/set', methods=['POST'])
+def set_session():
+    session_data = request.json['session']
+    cookies = {}
+    for itt in session_data.split(';'):
+        itt = itt.strip()
+        kvs = itt.split("=")
+        k = kvs[0]
+        v = '='.join(kvs[1:])
+        cookies[k] = v
+
+    for c in cookies:
+        cookies[c] = cookies[c]
+    
+    config = sync()['config']
+    endpoint = config['server']['endpoint']
+    server = config['server']['server']
+    
+    DataReader.session_set({
+        'endpoint': endpoint,
+        'server': server,
+        'cookies': cookies
+    })
+    
+    
+    
+    return jsonify(DataReader.get_session())
 
 @app.route('/app/js', methods=['GET'])
 def get_js():

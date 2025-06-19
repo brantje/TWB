@@ -3,7 +3,8 @@ Class for using one generic cookie jar, emulating a single tab
 """
 
 import requests
-
+import os
+import signal
 from core.filemanager import FileManager
 from core.notification import Notification
 
@@ -122,26 +123,29 @@ class WebWrapper:
             self.logger.warning("Current session cache not valid")
 
         self.web.cookies.clear()
-        cinp = input("Enter browser cookie string> ")
-        cookies = {}
-        cinp = cinp.strip()
-        for itt in cinp.split(';'):
-            itt = itt.strip()
-            kvs = itt.split("=")
-            k = kvs[0]
-            v = '='.join(kvs[1:])
-            cookies[k] = v
-        self.web.cookies.update(cookies)
-        self.logger.info("Game Endpoint: %s", self.endpoint)
+        self.logger.info("Killing bot, set cookies via the webmanager")
+        os.kill(os.getpid(), signal.SIGKILL)
+        return False
+        # cinp = input("Enter browser cookie string> ")
+        # cookies = {}
+        # cinp = cinp.strip()
+        # for itt in cinp.split(';'):
+        #     itt = itt.strip()
+        #     kvs = itt.split("=")
+        #     k = kvs[0]
+        #     v = '='.join(kvs[1:])
+        #     cookies[k] = v
+        # self.web.cookies.update(cookies)
+        # self.logger.info("Game Endpoint: %s", self.endpoint)
 
-        for c in self.web.cookies:
-            cookies[c.name] = c.value
+        # for c in self.web.cookies:
+        #     cookies[c.name] = c.value
 
-        FileManager.save_json_file({
-            'endpoint': self.endpoint,
-            'server': self.server,
-            'cookies': cookies
-        }, "cache/session.json")
+        # FileManager.save_json_file({
+        #     'endpoint': self.endpoint,
+        #     'server': self.server,
+        #     'cookies': cookies
+        # }, "cache/session.json")
 
     def get_action(self, village_id, action):
         """
