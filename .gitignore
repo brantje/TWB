@@ -6,6 +6,7 @@ __pycache__/
 config.json
 cache/**
 config.bak
+twb
 # C extensions
 *.so
 # Distribution / packaging
